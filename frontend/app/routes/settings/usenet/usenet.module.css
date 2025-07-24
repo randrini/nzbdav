@@ -1,0 +1,22 @@
+.container {
+    max-width:400px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.justify-right{
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.test-connection-button {
+    margin-top: 12px;
+}
+
+.input::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
