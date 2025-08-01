@@ -30,6 +30,7 @@ public class GetConfigController(
         // update the categories
         var categoriesRoot = root["config"]?["categories"]?.AsArray()!;
         var categories = configManager.GetApiCategories().Split(',')
+            .Select(x => x.Trim())
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .ToList();
         foreach (var category in categories)
