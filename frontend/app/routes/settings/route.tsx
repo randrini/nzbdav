@@ -103,17 +103,17 @@ function Body(props: BodyProps) {
             method: "POST",
             body: (() => {
                 const form = new FormData();
-                form.append("config", JSON.stringify(newConfig));
+                const changedConfig = getChangedConfig(config, newConfig);
+                form.append("config", JSON.stringify(changedConfig));
                 return form;
             })()
         });
         if (response.ok) {
-            const updatedConfig = (await response.json()).config;
-            setConfig(updatedConfig);
+            setConfig(newConfig);
         }
         setIsSaving(false);
         setIsSaved(true);
-    }, [setIsSaving, setIsSaved, newConfig, setConfig]);
+    }, [config, newConfig, setIsSaving, setIsSaved, setConfig]);
 
     return (
         <div className={styles.container}>
@@ -148,4 +148,18 @@ function Body(props: BodyProps) {
             </Button>
         </div>
     );
+}
+
+function getChangedConfig(
+    config: Record<string, string>,
+    newConfig: Record<string, string>
+): Record<string, string> {
+    let changedConfig: Record<string, string> = {};
+    let configKeys = Object.keys(defaultConfig);
+    for (const configKey of configKeys) {
+        if (config[configKey] !== newConfig[configKey]) {
+            changedConfig[configKey] = newConfig[configKey];
+        }
+    }
+    return changedConfig;
 }
