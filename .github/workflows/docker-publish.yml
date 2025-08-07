@@ -62,6 +62,6 @@ jobs:
         git config user.email "randrini@live.com"
         git add BUILD_INFO.md
         git diff --staged --quiet || git commit -m "Update build info [skip ci]"
-        git push
+        git push https://x-access-token:${{ secrets.GHCR_PAT }}@github.com/${{ github.repository }}.git
       env:
         GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
