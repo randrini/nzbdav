@@ -4,36 +4,64 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
-
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHCR_PAT }}
 
-      - name: Build and push Docker image (amd64 + arm64)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/${{ github.repository }}:pre-alpha
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=pre-alpha
+          type=sha,prefix={{branch}}-
+
+    - name: Build and push Docker image (amd64 + arm64)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Update README with latest build info
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Last updated: $(date -u)" >> BUILD_INFO.md
+        echo "Platforms: linux/amd64,linux/arm64" >> BUILD_INFO.md
+        git config user.name "randrini"
+        git config user.email "randrini@live.com"
+        git add BUILD_INFO.md
+        git diff --staged --quiet || git commit -m "Update build info [skip ci]"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
