@@ -53,15 +53,3 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Update README with latest build info
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "Last updated: $(date -u)" >> BUILD_INFO.md
-        echo "Platforms: linux/amd64,linux/arm64" >> BUILD_INFO.md
-        git config user.name "randrini"
-        git config user.email "randrini@live.com"
-        git add BUILD_INFO.md
-        git diff --staged --quiet || git commit -m "Update build info [skip ci]"
-        git push https://x-access-token:${{ secrets.GHCR_PAT }}@github.com/${{ github.repository }}.git
-      env:
-        GITHUB_TOKEN: ${{ secrets.GHCR_PAT }}
